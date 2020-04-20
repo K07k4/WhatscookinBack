@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import org.hibernate.query.Query;
 
 import com.whatscookin.ws.clases.Comentario;
+import com.whatscookin.ws.clases.Dificultad;
 import com.whatscookin.ws.clases.Favorito;
 import com.whatscookin.ws.clases.IngredienteReceta;
 import com.whatscookin.ws.clases.Puntuacion;
@@ -594,4 +595,74 @@ public class ServicioReceta {
 		return Response.ok().entity("Receta eliminada").build();
 	}
 
+	@GET
+	@Path("/getDificultad")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public static ArrayList<Dificultad> getDificultad(@QueryParam("idDificultad") int idDificultad) {
+
+		ArrayList<Dificultad> dificultades = new ArrayList<Dificultad>();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("from Dificultad WHERE id_dificultad = " + idDificultad, Dificultad.class);
+
+			List<Dificultad> list = query.list();
+
+			for (int i = 0; i < list.size(); i++) {
+				Dificultad dificultad = new Dificultad(list.get(i).getIdDificultad(),list.get(i).getDificultad());
+				dificultades.add(dificultad);
+			}
+
+			entityManager.getTransaction().commit();
+
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return dificultades;
+	}
+
+	@GET
+	@Path("/getTipoReceta")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public static ArrayList<TipoReceta> getTipoReceta(@QueryParam("idTipoReceta") int idTipoReceta) {
+
+		ArrayList<TipoReceta> tiposRecetas = new ArrayList<TipoReceta>();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("from TipoReceta WHERE id_tipo_receta = " + idTipoReceta, TipoReceta.class);
+
+			List<TipoReceta> list = query.list();
+
+			for (int i = 0; i < list.size(); i++) {
+				TipoReceta tipoReceta = new TipoReceta(list.get(i).getIdTipoReceta(),list.get(i).getNombre());
+				tiposRecetas.add(tipoReceta);
+			}
+
+			entityManager.getTransaction().commit();
+
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return tiposRecetas;
+	}
+	
 }
