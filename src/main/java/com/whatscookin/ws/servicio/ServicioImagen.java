@@ -1,10 +1,15 @@
 package com.whatscookin.ws.servicio;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -27,7 +32,8 @@ public class ServicioImagen {
 	// Path donde se almacenan las imágenes
 	String folder = "D:/Kotka/Desktop/uploads/";
 
-	// Almacena una imagen formato jpg en el equipo del servidor
+	// Almacena una imagen formato jpg en el equipo del servidor, con tamaño máximo
+	// de 5MB
 	@POST
 	@Path("/upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -57,45 +63,76 @@ public class ServicioImagen {
 		// El nombre de la imagen corresponde al id, así ahorramos un campo en la base
 		// de datos
 		String uploadedFileLocation = folder + id + ".jpg";
+		String tempUploadedFileLocation = folder + id + "temp.jpg";
 
 		// La almacena en la carpeta
 		// En caso que se quiera cambiar la imagen, se sobreescribirá. Por lo que
 		// siempre habrá únicamente 1 imagen por receta/usuario
 
-		if (writeToFile(uploadedInputStream, uploadedFileLocation)) {
+		if (writeToFile(uploadedInputStream, uploadedFileLocation, tempUploadedFileLocation, String.valueOf(id),
+				folder)) {
 			return Response.status(200).entity("Imagen almacenada en: " + folder).build();
 		} else {
-			return Response.status(500).entity("La imagen debe pesar menos de 5MB").build();
+			return Response.status(500).entity("La imagen pesa más de 5MB").build();
 		}
 
 	}
 
-	// TODO: Controlar el tamaño de la imagen antes de subirla
-	// Guarda la imagen subida a la dirección local del servidor
-	private boolean writeToFile(InputStream uploadedInputStream, String uploadedFileLocation) {
+	// Guarda la imagen subida a la dirección local del servidor. Si ya existe, la
+	// sobrescribe. Si pesa más de 5MB no.
+	private boolean writeToFile(InputStream uploadedInputStream, String uploadedFileLocation,
+			String tempUploadedFileLocation, String id, String folder) {
+		boolean valid = false; // Flag para ver si la imagen pesa menos de 5MB
+
+		InputStream is = null;
+		OutputStream os = null;
+
+		BufferedInputStream bufferedInput = new BufferedInputStream(uploadedInputStream);
 
 		try {
-			OutputStream out = new FileOutputStream(new File(uploadedFileLocation));
+			OutputStream out = new FileOutputStream(new File(tempUploadedFileLocation));
 
 			int read = 0;
 			int counter = 0;
 			byte[] bytes = new byte[1024];
-			out = new FileOutputStream(new File(uploadedFileLocation));
-			while ((read = uploadedInputStream.read(bytes)) != -1) {
+			out = new FileOutputStream(new File(tempUploadedFileLocation));
+			while ((read = uploadedInputStream.read(bytes)) != -1 && counter <= 5120) {
 				out.write(bytes, 0, read);
 				counter++;
 			}
 
-			System.out.println("TAMAÑO: " + (Double.valueOf(counter) / 1024) + " MB");
-
 			out.flush();
 			out.close();
-			return true;
+			// Si counter/1024 > 5, limita el tamaño a 5MB. Podría almacenarse primero como
+			// id+"temp" y si es correcto, reemplazar el original con nombre id
+			if (counter < 5120) {
+				is = new FileInputStream(folder + id + "temp.jpg");
+				os = new FileOutputStream(folder + id + ".jpg");
+
+				// Se copia el archivo id+temp.jpg a id.jpg
+				
+				byte[] buffer = new byte[1024];
+				int length;
+				while ((length = is.read(buffer)) > 0) {
+					os.write(buffer, 0, length);
+				}
+				os.flush();
+				is.close();
+				os.close();
+
+				valid = true;
+			}
+
+			File temp = new File(folder + id + "temp.jpg");
+
+			System.gc(); // Se pasa el recolector de basura para permitir eliminar el archivo temporal
+
+			temp.delete(); // Se elimina el archivo it+temp.jpg
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		return false;
+		return valid;
 	}
 
 	// Obtiene la imagen según el id y el tipo (usuario o receta)
@@ -135,7 +172,7 @@ public class ServicioImagen {
 	@Path("/delete")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response getFile(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
+	public Response deleteImage(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
 
 		// Se filtra para buscar según el tipo
 		if (tipo.equals("usuario")) {
