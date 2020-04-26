@@ -1,15 +1,11 @@
 package com.whatscookin.ws.servicio;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -87,8 +83,6 @@ public class ServicioImagen {
 		InputStream is = null;
 		OutputStream os = null;
 
-		BufferedInputStream bufferedInput = new BufferedInputStream(uploadedInputStream);
-
 		try {
 			OutputStream out = new FileOutputStream(new File(tempUploadedFileLocation));
 
@@ -110,7 +104,7 @@ public class ServicioImagen {
 				os = new FileOutputStream(folder + id + ".jpg");
 
 				// Se copia el archivo id+temp.jpg a id.jpg
-				
+
 				byte[] buffer = new byte[1024];
 				int length;
 				while ((length = is.read(buffer)) > 0) {
