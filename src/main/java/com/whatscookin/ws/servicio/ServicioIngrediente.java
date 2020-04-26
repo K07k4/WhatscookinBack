@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -19,6 +18,7 @@ import javax.ws.rs.core.Response;
 import org.hibernate.query.Query;
 
 import com.whatscookin.ws.clases.Ingrediente;
+import com.whatscookin.ws.clases.IngredienteReceta;
 import com.whatscookin.ws.clases.TipoIngrediente;
 
 @Path("/ingrediente")
@@ -240,4 +240,45 @@ public class ServicioIngrediente {
 		return ingredientes;
 	}
 
+	
+	@GET
+	@Path("/getIngredientesReceta")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public ArrayList<Ingrediente> getIngredientesReceta(@QueryParam("id") int idReceta) {
+
+		ArrayList<Ingrediente> ingredientes = new ArrayList<Ingrediente>();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("FROM Ingrediente WHERE idIngrediente IN(SELECT idIngrediente FROM IngredienteReceta WHERE idReceta = " + idReceta + ")",
+					Ingrediente.class);
+
+			List<Ingrediente> list = query.list();
+
+			for (int i = 0; i < list.size(); i++) {
+				Ingrediente ingrediente = new Ingrediente();
+				
+				ingrediente.setIdIngrediente(list.get(i).getIdIngrediente());
+				ingrediente.setIdTipoIngrediente(list.get(i).getIdTipoIngrediente());
+				ingrediente.setIngrediente(list.get(i).getIngrediente());
+
+				ingredientes.add(ingrediente);
+			}
+
+			entityManager.getTransaction().commit();
+
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return ingredientes;
+	}
 }
