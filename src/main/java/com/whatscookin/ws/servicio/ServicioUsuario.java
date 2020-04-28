@@ -1,9 +1,16 @@
 package com.whatscookin.ws.servicio;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -19,6 +26,7 @@ import javax.ws.rs.core.Response;
 
 import org.hibernate.query.Query;
 
+import com.sun.mail.smtp.SMTPTransport;
 import com.whatscookin.ws.clases.Comentario;
 import com.whatscookin.ws.clases.Favorito;
 import com.whatscookin.ws.clases.Puntuacion;
@@ -51,10 +59,13 @@ public class ServicioUsuario {
 
 		ArrayList<Usuario> usuarios = getAllUsuarios();
 
-		if (nombre != "" && pass != "" && isValid(email) && !nombre.contains(" ") && !nombre.contains("'") && !nombre.contains("@")
-				&& !pass.contains("'") && !email.contains("'")) { // Comprueba que los campos no estén vacíos, que el
-																	// email es válido, y protege la base de datos
-																	// denegando los caracteres ' y espacio
+		if (nombre != "" && pass != "" && isValid(email) && !nombre.contains(" ") && !nombre.contains("'")
+				&& !nombre.contains("@") && !pass.contains("'") && !email.contains("'")) { // Comprueba que los campos
+																							// no estén vacíos, que el
+																							// email es válido, y
+																							// protege la base de datos
+																							// denegando los caracteres
+																							// ' y espacio
 
 			for (Usuario u : usuarios) { // Iteración para comprobar que si está registrado el nombre o el email
 
@@ -266,6 +277,103 @@ public class ServicioUsuario {
 		}
 
 		return Response.ok().entity("Usuario eliminado").build();
+	}
+
+	@POST
+	@Path("/recuperarPass")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response recuperarPass(@QueryParam("email") String email) {
+
+		Usuario usuario = new Usuario();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("from Usuario WHERE email_usuario LIKE '" + email + "'",
+					Usuario.class);
+
+			List<Usuario> list = query.list();
+
+			try {
+				usuario = list.get(0);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (usuario.getEmail() == null) {
+			return Response.serverError().entity("No se ha encontrado un usuario con email: " + email).build();
+		}
+		
+		final String SMTP_SERVER = "smtp.office365.com";
+		final String USERNAME = "whatscookinteam@outlook.com";
+		final String PASSWORD = "bestrecipeever94";
+
+		final String EMAIL_FROM = "whatscookinteam@outlook.com";
+		final String EMAIL_TO = usuario.getEmail();
+		final String EMAIL_TO_CC = "";
+
+		final String EMAIL_SUBJECT = "Recuperación de contraseña";
+		final String EMAIL_TEXT = "Buenas, " + usuario.getNombre() + "\n\nSu contraseña es: " + usuario.getPass()
+				+ "\n\n\nWhatscookin Team";
+
+		Properties prop = System.getProperties();
+		prop.put("mail.smtp.host", SMTP_SERVER); // optional, defined in SMTPTransport
+		prop.put("mail.smtp.auth", "true");
+		prop.put("mail.smtp.port", "587"); // default port 25
+		prop.put("mail.smtp.starttls.enable", "true");
+		prop.put("mail.smtp.auth", "true");
+
+		Session session = Session.getInstance(prop, null);
+		Message msg = new MimeMessage(session);
+
+		try {
+
+			// from
+			msg.setFrom(new InternetAddress(EMAIL_FROM));
+
+			// to
+			msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(EMAIL_TO, false));
+
+			// cc
+			msg.setRecipients(Message.RecipientType.CC, InternetAddress.parse(EMAIL_TO_CC, false));
+
+			// subject
+			msg.setSubject(EMAIL_SUBJECT);
+
+			// content
+			msg.setText(EMAIL_TEXT);
+
+			msg.setSentDate(new Date());
+
+			// Get SMTPTransport
+			SMTPTransport t = (SMTPTransport) session.getTransport("smtp");
+
+			// connect
+			t.connect(SMTP_SERVER, USERNAME, PASSWORD);
+
+			// send
+			t.sendMessage(msg, msg.getAllRecipients());
+
+			System.out.println("Response: " + t.getLastServerResponse());
+
+			t.close();
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			return Response.serverError().entity("No se ha podido enviar el email").build();
+		}
+
+		return Response.ok().entity("Email con contraseña enviado correctamente").build();
 	}
 
 }
