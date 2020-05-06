@@ -312,7 +312,7 @@ public class ServicioUsuario {
 		if (usuario.getEmail() == null) {
 			return Response.serverError().entity("No se ha encontrado un usuario con email: " + email).build();
 		}
-		
+
 		final String SMTP_SERVER = "smtp.office365.com";
 		final String USERNAME = "whatscookinteam@outlook.com";
 		final String PASSWORD = "bestrecipeever94";
@@ -374,13 +374,14 @@ public class ServicioUsuario {
 
 		return Response.ok().entity("Email con contraseña enviado correctamente").build();
 	}
-	
-	// Comprueba el login. De ser correcto devuelve true
+
+	// Comprueba el login. De ser correcto devuelve el ID del usuario. De lo
+	// contrario, -1, que no corresponde a ningún ID
 	@POST
 	@Path("/login")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public boolean login(@QueryParam("user") String user, @QueryParam("pass") String pass) {
+	public int login(@QueryParam("user") String user, @QueryParam("pass") String pass) {
 
 		Usuario usuario = new Usuario();
 
@@ -390,7 +391,8 @@ public class ServicioUsuario {
 
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from Usuario WHERE email_usuario LIKE '" + user + "' AND pass_usuario LIKE '" + pass + "'",
+			Query query = (Query) entityManager.createQuery(
+					"from Usuario WHERE email_usuario LIKE '" + user + "' AND pass_usuario LIKE '" + pass + "'",
 					Usuario.class);
 
 			List<Usuario> list = query.list();
@@ -404,15 +406,14 @@ public class ServicioUsuario {
 
 					entityManager2.getTransaction().begin();
 
-
-					Query query2 = (Query) entityManager2.createQuery("from Usuario WHERE nombre_usuario LIKE '" + user + "' AND pass_usuario LIKE '" + pass + "'",
-							Usuario.class);
+					Query query2 = (Query) entityManager2.createQuery("from Usuario WHERE nombre_usuario LIKE '" + user
+							+ "' AND pass_usuario LIKE '" + pass + "'", Usuario.class);
 
 					list = query2.list();
-					
+
 					usuario = list.get(0);
 				} catch (Exception e1) {
-					return false;
+					return -1;
 				}
 			}
 			entityManager.close();
@@ -420,10 +421,10 @@ public class ServicioUsuario {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
+			return -1;
 		}
 
-		return true;
+		return usuario.getId();
 	}
 
 }
