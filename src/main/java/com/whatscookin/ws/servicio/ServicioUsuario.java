@@ -7,7 +7,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -374,6 +373,57 @@ public class ServicioUsuario {
 		}
 
 		return Response.ok().entity("Email con contraseña enviado correctamente").build();
+	}
+	
+	// Comprueba el login. De ser correcto devuelve true
+	@POST
+	@Path("/login")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public boolean login(@QueryParam("user") String user, @QueryParam("pass") String pass) {
+
+		Usuario usuario = new Usuario();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("from Usuario WHERE email_usuario LIKE '" + user + "' AND pass_usuario LIKE '" + pass + "'",
+					Usuario.class);
+
+			List<Usuario> list = query.list();
+
+			try {
+				usuario = list.get(0);
+			} catch (Exception e) {
+				try {
+					EntityManagerFactory factory2 = Persistence.createEntityManagerFactory("whatscookin");
+					EntityManager entityManager2 = factory2.createEntityManager();
+
+					entityManager2.getTransaction().begin();
+
+
+					Query query2 = (Query) entityManager2.createQuery("from Usuario WHERE nombre_usuario LIKE '" + user + "' AND pass_usuario LIKE '" + pass + "'",
+							Usuario.class);
+
+					list = query2.list();
+					
+					usuario = list.get(0);
+				} catch (Exception e1) {
+					return false;
+				}
+			}
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
 	}
 
 }
