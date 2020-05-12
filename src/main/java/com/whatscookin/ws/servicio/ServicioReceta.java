@@ -448,8 +448,10 @@ public class ServicioReceta {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public static ArrayList<Receta> getRecetasBusqueda(@QueryParam("idTipoReceta") int idTipoReceta,
-			@QueryParam("idUsuario") int idUsuario, @QueryParam("idDificultad") int idDificultad,
-			@QueryParam("duracion") int duracion, @QueryParam("puntuacionMinima") double puntuacionMinima,
+			@QueryParam("idUsuario") int idUsuario, @QueryParam("idDificultadMin") int idDificultadMin,
+			@QueryParam("idDificultadMax") int idDificultadMax, @QueryParam("duracionMin") int duracionMin,
+			@QueryParam("duracionMax") int duracionMax, @QueryParam("puntuacionMin") double puntuacionMin,
+			@QueryParam("puntuacionMax") double puntuacionMax,
 			@QueryParam("idIngrediente") List<Integer> listaIdIngrediente) {
 
 		ArrayList<Receta> recetas = new ArrayList<Receta>();
@@ -484,16 +486,20 @@ public class ServicioReceta {
 				queryString += " AND idTipoReceta = " + idTipoReceta;
 			}
 
-			if (idDificultad > 0) {
-				queryString += " AND idDificultad = " + idDificultad;
+			if (idDificultadMin > 0) {
+				queryString += " AND idDificultad >= " + idDificultadMin + " AND idDificultad <= " + idDificultadMax;
 			}
 
-			if (duracion > 0) {
-				queryString += " AND duracion >= " + duracion;
+			if (duracionMin > 0) {
+				queryString += " AND duracion >= " + duracionMin;
+				
+				if(duracionMax >= 120) {
+					queryString += " AND duracion <= " + duracionMax;
+				}
 			}
 
-			if (puntuacionMinima > 0) {
-				queryString += " AND puntuacion >= " + puntuacionMinima;
+			if (puntuacionMin > 0) {
+				queryString += " AND puntuacion >= " + puntuacionMin + " AND puntuacion <= " + puntuacionMax;
 			}
 
 			System.out.println(queryString);
@@ -609,12 +615,13 @@ public class ServicioReceta {
 
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from Dificultad WHERE id_dificultad = " + idDificultad, Dificultad.class);
+			Query query = (Query) entityManager.createQuery("from Dificultad WHERE id_dificultad = " + idDificultad,
+					Dificultad.class);
 
 			List<Dificultad> list = query.list();
 
 			for (int i = 0; i < list.size(); i++) {
-				Dificultad dificultad = new Dificultad(list.get(i).getIdDificultad(),list.get(i).getDificultad());
+				Dificultad dificultad = new Dificultad(list.get(i).getIdDificultad(), list.get(i).getDificultad());
 				dificultades.add(dificultad);
 			}
 
@@ -644,12 +651,13 @@ public class ServicioReceta {
 
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from TipoReceta WHERE id_tipo_receta = " + idTipoReceta, TipoReceta.class);
+			Query query = (Query) entityManager.createQuery("from TipoReceta WHERE id_tipo_receta = " + idTipoReceta,
+					TipoReceta.class);
 
 			List<TipoReceta> list = query.list();
 
 			for (int i = 0; i < list.size(); i++) {
-				TipoReceta tipoReceta = new TipoReceta(list.get(i).getIdTipoReceta(),list.get(i).getNombre());
+				TipoReceta tipoReceta = new TipoReceta(list.get(i).getIdTipoReceta(), list.get(i).getNombre());
 				tiposRecetas.add(tipoReceta);
 			}
 
@@ -664,5 +672,5 @@ public class ServicioReceta {
 
 		return tiposRecetas;
 	}
-	
+
 }

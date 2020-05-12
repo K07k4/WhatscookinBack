@@ -69,11 +69,12 @@ public class ServicioUsuario {
 			for (Usuario u : usuarios) { // Iteración para comprobar que si está registrado el nombre o el email
 
 				if (u.getEmail().equals(email)) {
-					return Response.serverError().entity("El email ya está registrado").build();
+					return Response.serverError().status(403).entity("El email ya está registrado").build();
+
 				}
 
 				if (u.getNombre().equals(nombre)) {
-					return Response.serverError().entity("El usuario ya está registrado").build();
+					return Response.serverError().status(403).entity("El usuario ya está registrado").build();
 				}
 			}
 
@@ -99,11 +100,11 @@ public class ServicioUsuario {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				return Response.serverError().entity("Ha ocurrido un error: " + e.getMessage()).build();
+				return Response.serverError().status(400).entity("Ha ocurrido un error: " + e.getMessage()).build();
 			}
 
 		} else {
-			return Response.serverError().entity(
+			return Response.serverError().status(406).entity(
 					"No se ha podido crear el usuario. Comprueba que no hay campos vacíos y que el email es correcto")
 					.build();
 		}
@@ -310,7 +311,8 @@ public class ServicioUsuario {
 		}
 
 		if (usuario.getEmail() == null) {
-			return Response.serverError().entity("No se ha encontrado un usuario con email: " + email).build();
+			return Response.serverError().status(404).entity("No se ha encontrado un usuario con email: " + email)
+					.build();
 		}
 
 		final String SMTP_SERVER = "smtp.office365.com";
