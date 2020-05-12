@@ -324,7 +324,7 @@ public class ServicioReceta {
 	@Path("/getAleatoria")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public static Receta getAleatoria() {
+	public static int getAleatoria() {
 
 		ArrayList<Receta> recetas = new ArrayList<Receta>();
 
@@ -358,10 +358,11 @@ public class ServicioReceta {
 			e.printStackTrace();
 		}
 
-		return receta;
+		return receta.getIdReceta();
 	}
 
-	// Devuelve todas las recetas, ordenadas de mayor a menor puntuación media
+	// Devuelve todas las recetas, ordenadas de mayor a menor puntuación media. 10
+	// como máximo
 	@GET
 	@Path("/getMejores")
 	@Consumes({ MediaType.APPLICATION_JSON })
@@ -369,19 +370,25 @@ public class ServicioReceta {
 	public static ArrayList<Receta> getMejores() {
 
 		ArrayList<Receta> recetas = new ArrayList<Receta>();
+		EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+		EntityManager entityManager = factory.createEntityManager();
 
+		Query query = (Query) entityManager.createQuery("from Receta ORDER BY puntuacion_receta DESC", Receta.class);
 		try {
-			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
-			EntityManager entityManager = factory.createEntityManager();
 
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from Receta ORDER BY puntuacion_receta DESC",
-					Receta.class);
-
 			List<Receta> list = query.list();
 
-			for (int i = 0; i < list.size(); i++) {
+			int max = 0;
+			
+			if(list.size() < 10) {
+				max = list.size();
+			} else {
+				max = 10;
+			}
+			
+			for (int i = 0; i < max; i++) {
 				Receta receta = new Receta(list.get(i).getIdReceta(), list.get(i).getIdTipoReceta(),
 						list.get(i).getTitulo(), list.get(i).getInstrucciones(), list.get(i).getIdDificultad(),
 						list.get(i).getIdUsuario(), list.get(i).getDuracion(), list.get(i).getPuntuacion(),
@@ -391,17 +398,19 @@ public class ServicioReceta {
 
 			entityManager.getTransaction().commit();
 
-			entityManager.close();
-			factory.close();
-
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+
+			entityManager.close();
+			factory.close();
 		}
 
 		return recetas;
 	}
 
-	// Devuelve todas las recetas, ordenadas de mayor a menor puntuación media
+	// Devuelve todas las recetas, ordenadas de mayor a menor puntuación media, 10
+	// como máximo
 	@GET
 	@Path("/getMasPuntuadas")
 	@Consumes({ MediaType.APPLICATION_JSON })
@@ -410,18 +419,25 @@ public class ServicioReceta {
 
 		ArrayList<Receta> recetas = new ArrayList<Receta>();
 
-		try {
-			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
-			EntityManager entityManager = factory.createEntityManager();
+		EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+		EntityManager entityManager = factory.createEntityManager();
 
+		Query query = (Query) entityManager.createQuery("from Receta ORDER BY numero_puntuaciones DESC", Receta.class);
+
+		try {
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from Receta ORDER BY numero_puntuaciones DESC",
-					Receta.class);
-
 			List<Receta> list = query.list();
+			
+			int max = 0;
+			
+			if(list.size() < 10) {
+				max = list.size();
+			} else {
+				max = 10;
+			}
 
-			for (int i = 0; i < list.size(); i++) {
+			for (int i = 0; i < max; i++) {
 				Receta receta = new Receta(list.get(i).getIdReceta(), list.get(i).getIdTipoReceta(),
 						list.get(i).getTitulo(), list.get(i).getInstrucciones(), list.get(i).getIdDificultad(),
 						list.get(i).getIdUsuario(), list.get(i).getDuracion(), list.get(i).getPuntuacion(),
@@ -431,11 +447,59 @@ public class ServicioReceta {
 
 			entityManager.getTransaction().commit();
 
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
 			entityManager.close();
 			factory.close();
+		}
+
+		return recetas;
+	}
+
+	// Devuelve todas las recetas, ordenadas de mayor a menor puntuación media, 10
+	// como máximo
+	@GET
+	@Path("/getMasRecientes")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public static ArrayList<Receta> getMasRecientes() {
+
+		ArrayList<Receta> recetas = new ArrayList<Receta>();
+		EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+		EntityManager entityManager = factory.createEntityManager();
+
+		Query query = (Query) entityManager.createQuery("from Receta ORDER BY id_receta DESC", Receta.class);
+
+		try {
+
+			entityManager.getTransaction().begin();
+
+			List<Receta> list = query.list();
+
+			int max = 0;
+			
+			if(list.size() < 10) {
+				max = list.size();
+			} else {
+				max = 10;
+			}
+			
+			for (int i = 0; i < max; i++) {
+				Receta receta = new Receta(list.get(i).getIdReceta(), list.get(i).getIdTipoReceta(),
+						list.get(i).getTitulo(), list.get(i).getInstrucciones(), list.get(i).getIdDificultad(),
+						list.get(i).getIdUsuario(), list.get(i).getDuracion(), list.get(i).getPuntuacion(),
+						list.get(i).getNumeroPuntuaciones());
+				recetas.add(receta);
+			}
+
+			entityManager.getTransaction().commit();
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			entityManager.close();
+			factory.close();
 		}
 
 		return recetas;
@@ -447,11 +511,11 @@ public class ServicioReceta {
 	@Path("/getRecetasBusqueda")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public static ArrayList<Receta> getRecetasBusqueda(@QueryParam("idTipoReceta") int idTipoReceta,
-			@QueryParam("idUsuario") int idUsuario, @QueryParam("idDificultadMin") int idDificultadMin,
-			@QueryParam("idDificultadMax") int idDificultadMax, @QueryParam("duracionMin") int duracionMin,
-			@QueryParam("duracionMax") int duracionMax, @QueryParam("puntuacionMin") double puntuacionMin,
-			@QueryParam("puntuacionMax") double puntuacionMax,
+	public static ArrayList<Receta> getRecetasBusqueda(@QueryParam("tituloReceta") String tituloReceta,
+			@QueryParam("idTipoReceta") int idTipoReceta, @QueryParam("idUsuario") int idUsuario,
+			@QueryParam("idDificultadMin") int idDificultadMin, @QueryParam("idDificultadMax") int idDificultadMax,
+			@QueryParam("duracionMin") int duracionMin, @QueryParam("duracionMax") int duracionMax,
+			@QueryParam("puntuacionMin") double puntuacionMin, @QueryParam("puntuacionMax") double puntuacionMax,
 			@QueryParam("idIngrediente") List<Integer> listaIdIngrediente) {
 
 		ArrayList<Receta> recetas = new ArrayList<Receta>();
@@ -478,6 +542,10 @@ public class ServicioReceta {
 
 			System.out.println("EL ID DE USUARIO: " + idUsuario);
 
+			if (!tituloReceta.isEmpty()) {
+				queryString += " AND titulo_receta LIKE '%" + tituloReceta + "%'";
+			}
+
 			if (idUsuario > 0) {
 				queryString += " AND idUsuario = " + idUsuario;
 			}
@@ -492,8 +560,8 @@ public class ServicioReceta {
 
 			if (duracionMin > 0) {
 				queryString += " AND duracion >= " + duracionMin;
-				
-				if(duracionMax >= 120) {
+
+				if (duracionMax >= 120) {
 					queryString += " AND duracion <= " + duracionMax;
 				}
 			}
