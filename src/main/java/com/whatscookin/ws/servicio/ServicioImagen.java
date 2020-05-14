@@ -47,7 +47,7 @@ public class ServicioImagen {
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
-
+		
 		String[] fileNameArray = fileDetail.getFileName().split("\\.");
 
 		String format = fileNameArray[fileNameArray.length - 1].toLowerCase();
