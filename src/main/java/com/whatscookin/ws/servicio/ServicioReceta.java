@@ -45,6 +45,8 @@ public class ServicioReceta {
 		if (tituloReceta != "" && instrucciones != "" && idDificultad > 0 && idUsuario > 0 && duracion > 0
 				&& idTipoReceta > 0 && listaIdIngrediente.get(0) != null) {
 
+			int idReceta = 0;
+
 			try {
 				EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
 				EntityManager entityManager = factory.createEntityManager();
@@ -82,7 +84,7 @@ public class ServicioReceta {
 					entityManager.persist(receta);
 					entityManager.flush();
 
-					int idReceta = receta.getIdReceta();
+					idReceta = receta.getIdReceta();
 
 					for (int i = 0; i < listaIdIngrediente.size(); i++) {
 
@@ -103,7 +105,11 @@ public class ServicioReceta {
 				e.printStackTrace();
 			}
 
-			return Response.ok().entity("Receta creada correctamente").build();
+			if (idReceta == 0) {
+				return Response.serverError().entity("No se ha podido crear la receta").build();
+			} else {
+				return Response.ok().entity(idReceta).build();
+			}
 
 		} else {
 			return Response.serverError().entity("No se ha podido crear la receta").build();
@@ -541,7 +547,7 @@ public class ServicioReceta {
 					}
 
 				}
-				
+
 			} catch (Exception e) {
 				System.out.println("No hay ingredientes en esta receta");
 			}
@@ -710,7 +716,7 @@ public class ServicioReceta {
 
 		return dificultades;
 	}
-	
+
 	@GET
 	@Path("/getAllDificultad")
 	@Consumes({ MediaType.APPLICATION_JSON })
@@ -725,8 +731,7 @@ public class ServicioReceta {
 
 			entityManager.getTransaction().begin();
 
-			Query query = (Query) entityManager.createQuery("from Dificultad",
-					Dificultad.class);
+			Query query = (Query) entityManager.createQuery("from Dificultad", Dificultad.class);
 
 			List<Dificultad> list = query.list();
 
