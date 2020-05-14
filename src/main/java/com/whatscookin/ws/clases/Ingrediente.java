@@ -16,7 +16,7 @@ public class Ingrediente {
 
 	public Ingrediente(int idIngrediente, int idTipoIngrediente, String ingrediente) {
 		super();
-		this.idIngrediente = idTipoIngrediente;
+		this.idIngrediente = idIngrediente;
 		this.idTipoIngrediente = idTipoIngrediente;
 		this.ingrediente = ingrediente;
 	}

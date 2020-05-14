@@ -42,6 +42,8 @@ public class ServicioImagen {
 			folder += "usuarios/";
 		} else if (tipo.equals("receta")) {
 			folder += "recetas/";
+		} else if (tipo.equals("tipoReceta")){
+			folder += "tipoRecetas/";
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
@@ -135,20 +137,23 @@ public class ServicioImagen {
 	@Produces("image/jpg")
 	public Response getImage(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
 
+		String formato = ".jpg";
+		
 		// Se filtra para buscar según el tipo
 		if (tipo.equals("usuario")) {
 			folder += "usuarios/";
 		} else if (tipo.equals("receta")) {
 			folder += "recetas/";
-		} else if (tipo.equals("tipo")) {
-			folder += "tipos/";
+		} else if (tipo.equals("tipoReceta")) {
+			folder += "tipoRecetas/";
+			formato = ".png";
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
 
 		File file = null;
 		try {
-			file = new File(folder + id + ".jpg"); // Se busca la imagen en el servidor de archivos
+			file = new File(folder + id + formato); // Se busca la imagen en el servidor de archivos
 		} catch (Exception e) {
 			return Response.status(500).entity("No se ha encontrado la imagen").build();
 		}
@@ -168,18 +173,23 @@ public class ServicioImagen {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response deleteImage(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
 
+		String formato = ".jpg";
+		
 		// Se filtra para buscar según el tipo
 		if (tipo.equals("usuario")) {
 			folder += "usuarios/";
 		} else if (tipo.equals("receta")) {
 			folder += "recetas/";
+		} else if (tipo.equals("tipoReceta")){
+			folder += "tipoRecetas/";
+			formato = ".png";
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
 
 		File file = null;
 		try {
-			file = new File(folder + id + ".jpg"); // Se busca la imagen en el servidor de archivos
+			file = new File(folder + id + formato); // Se busca la imagen en el servidor de archivos
 
 			if (!file.exists()) { // Si no encuentra la imagen devuelve un error 500 como respuesta
 				return Response.status(500)

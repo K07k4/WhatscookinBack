@@ -381,13 +381,13 @@ public class ServicioReceta {
 			List<Receta> list = query.list();
 
 			int max = 0;
-			
-			if(list.size() < 10) {
+
+			if (list.size() < 10) {
 				max = list.size();
 			} else {
 				max = 10;
 			}
-			
+
 			for (int i = 0; i < max; i++) {
 				Receta receta = new Receta(list.get(i).getIdReceta(), list.get(i).getIdTipoReceta(),
 						list.get(i).getTitulo(), list.get(i).getInstrucciones(), list.get(i).getIdDificultad(),
@@ -428,10 +428,10 @@ public class ServicioReceta {
 			entityManager.getTransaction().begin();
 
 			List<Receta> list = query.list();
-			
+
 			int max = 0;
-			
-			if(list.size() < 10) {
+
+			if (list.size() < 10) {
 				max = list.size();
 			} else {
 				max = 10;
@@ -478,13 +478,13 @@ public class ServicioReceta {
 			List<Receta> list = query.list();
 
 			int max = 0;
-			
-			if(list.size() < 10) {
+
+			if (list.size() < 10) {
 				max = list.size();
 			} else {
 				max = 10;
 			}
-			
+
 			for (int i = 0; i < max; i++) {
 				Receta receta = new Receta(list.get(i).getIdReceta(), list.get(i).getIdTipoReceta(),
 						list.get(i).getTitulo(), list.get(i).getInstrucciones(), list.get(i).getIdDificultad(),
@@ -528,16 +528,22 @@ public class ServicioReceta {
 
 			String queryString = "from Receta WHERE id_receta > 0";
 
-			if (listaIdIngrediente.get(0) != null) {
+			try {
 
-				queryString = "from Receta WHERE id_receta IN(SELECT idReceta FROM IngredienteReceta WHERE id_ingrediente = "
-						+ listaIdIngrediente.get(0) + ")";
+				if (listaIdIngrediente.get(0) != null) {
 
-				for (int i = 1; i < listaIdIngrediente.size(); i++) {
-					queryString += " AND id_receta IN(SELECT idReceta FROM IngredienteReceta WHERE id_ingrediente = "
-							+ listaIdIngrediente.get(i) + ")";
+					queryString = "from Receta WHERE id_receta IN(SELECT idReceta FROM IngredienteReceta WHERE id_ingrediente = "
+							+ listaIdIngrediente.get(0) + ")";
+
+					for (int i = 1; i < listaIdIngrediente.size(); i++) {
+						queryString += " AND id_receta IN(SELECT idReceta FROM IngredienteReceta WHERE id_ingrediente = "
+								+ listaIdIngrediente.get(i) + ")";
+					}
+
 				}
-
+				
+			} catch (Exception e) {
+				System.out.println("No hay ingredientes en esta receta");
 			}
 
 			System.out.println("EL ID DE USUARIO: " + idUsuario);
@@ -684,6 +690,42 @@ public class ServicioReceta {
 			entityManager.getTransaction().begin();
 
 			Query query = (Query) entityManager.createQuery("from Dificultad WHERE id_dificultad = " + idDificultad,
+					Dificultad.class);
+
+			List<Dificultad> list = query.list();
+
+			for (int i = 0; i < list.size(); i++) {
+				Dificultad dificultad = new Dificultad(list.get(i).getIdDificultad(), list.get(i).getDificultad());
+				dificultades.add(dificultad);
+			}
+
+			entityManager.getTransaction().commit();
+
+			entityManager.close();
+			factory.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return dificultades;
+	}
+	
+	@GET
+	@Path("/getAllDificultad")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public static ArrayList<Dificultad> getAllDificultad() {
+
+		ArrayList<Dificultad> dificultades = new ArrayList<Dificultad>();
+
+		try {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("whatscookin");
+			EntityManager entityManager = factory.createEntityManager();
+
+			entityManager.getTransaction().begin();
+
+			Query query = (Query) entityManager.createQuery("from Dificultad",
 					Dificultad.class);
 
 			List<Dificultad> list = query.list();
