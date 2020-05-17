@@ -212,13 +212,19 @@ public class ServicioReceta {
 						.createQuery("from Puntuacion WHERE id_receta = " + idReceta);
 				List<Puntuacion> listPuntuacionReceta = queryPuntuacion.list();
 
-				double suma = puntuacion; // Se inicializa la media con la puntuación que se da
+				double suma = 0.0;
+
+				if (!puntuado) {
+					suma = puntuacion; // Se inicializa la media con la puntuación que se da en caso de no haber sido
+										// votado antes por el usuario
+				}
 				int numeroPuntuaciones = receta.getNumeroPuntuaciones();
 
 				// Se suman todas las puntuaciones de la receta
 				for (int i = 0; i < numeroPuntuaciones; i++) {
 					suma += listPuntuacionReceta.get(i).getPuntuacion();
 				}
+
 
 				// Si el usuario ya ha puntuado esta receta no se sumará al número total
 				if (!puntuado) {
@@ -567,22 +573,30 @@ public class ServicioReceta {
 			}
 
 			if (idDificultadMin > 0) {
-				queryString += " AND idDificultad >= " + idDificultadMin + " AND idDificultad <= " + idDificultadMax;
+				queryString += " AND idDificultad >= " + idDificultadMin;
+			}
+			
+			if (idDificultadMax > 0) {
+				queryString += " AND idDificultad <= " + idDificultadMax;
 			}
 
 			if (duracionMin > 0) {
 				queryString += " AND duracion >= " + duracionMin;
-
-				if (duracionMax >= 120) {
-					queryString += " AND duracion <= " + duracionMax;
-				}
+			}
+			
+			if (duracionMax > 0) {
+				queryString += " AND duracion <= " + duracionMax;
 			}
 
 			if (puntuacionMin > 0) {
-				queryString += " AND puntuacion >= " + puntuacionMin + " AND puntuacion <= " + puntuacionMax;
+				queryString += " AND puntuacion >= " + puntuacionMin;
 			}
 
-			System.out.println(queryString);
+			if (puntuacionMax > 0) {
+				queryString += " AND puntuacion <= " + puntuacionMax;
+			}
+			
+			System.out.println("QUERY: " + queryString.toString());
 
 			Query query = (Query) entityManager.createQuery(queryString, Receta.class);
 
