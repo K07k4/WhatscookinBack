@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 import org.hibernate.query.Query;
 
 import com.whatscookin.ws.clases.Ingrediente;
-import com.whatscookin.ws.clases.IngredienteReceta;
 import com.whatscookin.ws.clases.TipoIngrediente;
 
 @Path("/ingrediente")

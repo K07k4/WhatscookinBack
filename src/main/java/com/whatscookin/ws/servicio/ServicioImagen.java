@@ -42,12 +42,12 @@ public class ServicioImagen {
 			folder += "usuarios/";
 		} else if (tipo.equals("receta")) {
 			folder += "recetas/";
-		} else if (tipo.equals("tipoReceta")){
+		} else if (tipo.equals("tipoReceta")) {
 			folder += "tipoRecetas/";
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
-		
+
 		String[] fileNameArray = fileDetail.getFileName().split("\\.");
 
 		String format = fileNameArray[fileNameArray.length - 1].toLowerCase();
@@ -92,7 +92,9 @@ public class ServicioImagen {
 			int counter = 0;
 			byte[] bytes = new byte[1024];
 			out = new FileOutputStream(new File(tempUploadedFileLocation));
-			while ((read = uploadedInputStream.read(bytes)) != -1 && counter <= 5120) {
+			while ((read = uploadedInputStream.read(bytes)) != -1 && counter <= 5120) { // 5120 son los bytes máximos
+																						// permitidos, al superarlos no
+																						// permitira guardar la imagen
 				out.write(bytes, 0, read);
 				counter++;
 			}
@@ -119,7 +121,7 @@ public class ServicioImagen {
 				valid = true;
 			}
 
-			File temp = new File(folder + id + "temp.jpg");
+			File temp = new File(folder + id + "temp.jpg"); // Se selecciona la imagen temporal
 
 			System.gc(); // Se pasa el recolector de basura para permitir eliminar el archivo temporal
 
@@ -138,7 +140,7 @@ public class ServicioImagen {
 	public Response getImage(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
 
 		String formato = ".jpg";
-		
+
 		// Se filtra para buscar según el tipo
 		if (tipo.equals("usuario")) {
 			folder += "usuarios/";
@@ -146,7 +148,7 @@ public class ServicioImagen {
 			folder += "recetas/";
 		} else if (tipo.equals("tipoReceta")) {
 			folder += "tipoRecetas/";
-			formato = ".png";
+			formato = ".png"; // Se tienen en cuenta las imágenes de tipoRecetas, que están en formato .png
 		} else {
 			return Response.status(500).entity("Tipo de imagen inválido").build();
 		}
@@ -160,10 +162,7 @@ public class ServicioImagen {
 		return Response.ok(file, "image/jpg").header("Inline", "filename=\"" + file.getName() + "\"").build(); // Devuelve
 																												// la
 																												// imagen
-																												// con
-																												// un
-																												// formato
-																												// xml
+
 	}
 
 	// Elimina la imagen según el id y el tipo (usuario o receta)
@@ -174,13 +173,13 @@ public class ServicioImagen {
 	public Response deleteImage(@QueryParam("id") String id, @QueryParam("tipo") String tipo) {
 
 		String formato = ".jpg";
-		
+
 		// Se filtra para buscar según el tipo
 		if (tipo.equals("usuario")) {
 			folder += "usuarios/";
 		} else if (tipo.equals("receta")) {
 			folder += "recetas/";
-		} else if (tipo.equals("tipoReceta")){
+		} else if (tipo.equals("tipoReceta")) {
 			folder += "tipoRecetas/";
 			formato = ".png";
 		} else {
