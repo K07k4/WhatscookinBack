@@ -555,10 +555,9 @@ public class ServicioReceta {
 				}
 
 			} catch (Exception e) {
-				System.out.println("No hay ingredientes en esta receta");
+				// No hay ingredientes en esta receta
 			}
 
-			System.out.println("EL ID DE USUARIO: " + idUsuario);
 
 			if (!tituloReceta.isEmpty()) {
 				queryString += " AND titulo_receta LIKE '%" + tituloReceta + "%'";
@@ -596,8 +595,6 @@ public class ServicioReceta {
 				queryString += " AND puntuacion <= " + puntuacionMax;
 			}
 			
-			System.out.println("QUERY: " + queryString.toString());
-
 			Query query = (Query) entityManager.createQuery(queryString, Receta.class);
 
 			List<Receta> list = query.list();

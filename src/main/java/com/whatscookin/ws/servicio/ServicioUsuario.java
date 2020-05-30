@@ -365,8 +365,6 @@ public class ServicioUsuario {
 			// send
 			t.sendMessage(msg, msg.getAllRecipients());
 
-			System.out.println("Response: " + t.getLastServerResponse());
-
 			t.close();
 
 		} catch (Exception e1) {
